@@ -1,8 +1,8 @@
 # Grafana PDF Exporter
 
-This project allows exporting Grafana dashboards to PDF using Puppeteer. The project uses a Node.js server to handle HTTP requests and launch Puppeteer to generate the PDFs.
+Grafana PDF Exporter is a tool that enables you to export Grafana v12 dashboards as high-quality PDFs using Puppeteer. It runs a lightweight Node.js server that processes HTTP requests, launches a headless browser, and captures full dashboard views.
 
-It is possible to inject a button into Grafana to generate a PDF directly from the interface.
+You can also inject a custom button into the Grafana interface to allow users to export directly from the dashboard UI.
 
 ![Button displayed in Grafana](https://github.com/arthur-mdn/grafana-export-to-pdf/blob/main/illustrations/injected-button-in-grafana.png)
 
@@ -23,32 +23,33 @@ cd ExportGrafanaDashboardToPDF
 ## Configuration
 
 ### Environment Variables
-Duplicate the `.env.example` file and rename it to `.env`. 
+Duplicate the example environment file and rename it.
 
 ```shell
 cp .env.template .env
 nano .env
 ```
 
-Modify the values according to your configuration.
+Edit the values according to your configuration.
 
 ```dotenv
 GRAFANA_USER=gfexp
 GRAFANA_PASSWORD=gfexp
 ```
 
-`GRAFANA_USER` and `GRAFANA_PASSWORD` are the credentials used to authenticate to the Grafana instance.
+`GRAFANA_USER` and `GRAFANA_PASSWORD` are the credentials the exporter will use to log into Grafana.
 
 ## Usage
-To start the project, run the following command:
+To start the server, run the following command:
 
 ```shell
 docker compose up -d --build
 ```
-The server will be accessible on port 3001.
+By default, the service runs on port 3001.
 
 ### Generating a PDF
-To generate a PDF, send a POST request to the /generate-pdf API with the Grafana dashboard URL as a parameter.
+To generate a PDF, send a POST request to `/generate-pdf` with the Grafana dashboard URL.
+
 The server will respond with the URL of the generated PDF.
 
 #### Using cURL
@@ -66,29 +67,28 @@ docker exec -it grafana-export-to-pdf /usr/src/app/generate-pdf.sh GF_DASH_URL '
 ```
 
 #### Using an HTML button injected into Grafana
-> You must ensure that the ``disable_sanitize_html`` parameter is set to ``true`` in the Grafana configuration file to be able to inject HTML and Javascript code.
+> Make sure the ``disable_sanitize_html`` setting is set to ``true`` in your Grafana configuration to allow HTML/JS injection.
 >
 > ![Disable Sanitize HTML in Grafana Settings](https://github.com/arthur-mdn/grafana-export-to-pdf/blob/main/illustrations/grafana-disable-sanitize-html.png)
 
-To inject a button directly into Grafana, add the content of the `grafana-button.html` file to the "Text" field of a Grafana text panel.
+To add a PDF export button:
+ - Copy the content of `grafana-button.html` into a Grafana text panel.
+  ![How to inject the button in Grafana](https://github.com/arthur-mdn/grafana-export-to-pdf/blob/main/illustrations/inject-button-in-grafana.png)
+ - Modify the server URL in the script if necessary.
+    ```javascript
+    window.gfexpPdfGenerationServerUrl = 'http://localhost:3001';
+    ```
 
-![How to inject the button in Grafana](https://github.com/arthur-mdn/grafana-export-to-pdf/blob/main/illustrations/inject-button-in-grafana.png)
+The button should now be displayed in the native Grafana export dropdown menu.
 
-Make sure to modify the server URL if necessary. 
-```javascript
-window.gfexpPdfGenerationServerUrl = 'http://localhost:3001';
-```
-
-The button should now be displayed in the native Grafana share menu.
-
-You can easily deactivate the button injection by commenting the HTML marker
+You can disable injection by commenting out the HTML marker.
 ```html
 <!-- <div id="GFEXP_marker"> -->
   <!-- This is a marker to enable HTML injection in this panel -->
 <!-- </div> -->
 ```
 
-### Generating a PDF with a time range
+### Exporting with a Time Range
 
 > In the examples below, the time range is ``now-1y/y``, which corresponds to last year.
 
@@ -100,7 +100,7 @@ To generate a PDF with a time range, you can simply add the native Grafana time 
 http://your-grafana-server/d/your-dashboard-id?from=now-1y%2Fy&to=now-1y%2Fy
 ```
 
-But you can also specify the time range manually by specifying the `from` and `to` parameters in the request.
+Or provide them directly in the request body:
 
 #### Using cURL
 ```bash
@@ -121,14 +121,14 @@ The injected HTML button already retrieves the values of the selected time range
 
 ![Export Panel Values](https://github.com/arthur-mdn/grafana-export-to-pdf/blob/main/illustrations/export-modal-values.png)
 
-### Generating a PDF with a fixed width and height
+### Exporting with Fixed Width and Height
 To generate a PDF with a fixed width and height, you can adjust the `PDF_WIDTH_PX` and `PDF_HEIGHT_PX` variables in the `.env` file.
 ```dotenv
 PDF_WIDTH_PX=1920
 PDF_HEIGHT_PX=1080
 ```
 
-> If you want the PDF to be generated with the same height as the Grafana dashboard, you can set the height variable to `auto`:
+> To let the PDF match the full height of the dashboard without specifying a fixed height, you can set the `PDF_HEIGHT_PX` variable to `auto` in the `.env` file:
 > ```dotenv
 > PDF_HEIGHT_PX=auto
 > ```
@@ -162,7 +162,7 @@ http://your-grafana-server/d/your-dashboard-id?viewPanel=2
 
 ### Fetch the dashboard name and the time range from HTML elements to be used in the PDF filename
 
-To avoid fetching the dashboard name and the time range from the URL (that are sometimes not user-friendly), you can extract the values directly from HTML elements in the Grafana dashboard with a better display format.
+To make filenames more user-friendly, you can extract title/date directly from HTML elements.
 
 #### Example
 For this URL: `http://localhost/d/ID/stats?from=now-1y%2Fy&to=now-1y%2Fy`
@@ -202,7 +202,7 @@ And then add the following code to the Grafana panel where you want to display t
 ```
 
 ### Force Kiosk Mode
-By default, `FORCE_KIOSK_MODE` is set to `true`. This means that if the url does not contain the `kiosk` parameter, the server will add it to the URL to ensure that the PDF is generated without any elements overlapping the dashboard content . 
+By default, `FORCE_KIOSK_MODE` is set to `true`. This means that if the url does not contain the `kiosk` parameter, the server will add it to the URL to ensure that the PDF is generated without any elements overlapping the dashboard content. 
 
 #### Deactivation
 You can disable this behavior by setting the following variable to `false` in your `.env` file:
@@ -255,7 +255,8 @@ CHECK_QUERIES_TO_COMPLETE_QUERIES_COMPLETION_TIMEOUT=60000
 ```
 
 ### Expand Table Panels
-> Only available in Grafana v11.4+
+> 🧪 Only available in Grafana v11.4+
+
 By default, `EXPAND_TABLE_PANELS` is set to `false` due to performance concerns. When enabled, the server will try to auto-adjust the height of table panels to fit all the rows when generating the PDF. This can be useful to ensure that all data is visible in the PDF output.
 
 You can enable this feature via your .env file:
