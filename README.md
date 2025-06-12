@@ -166,8 +166,8 @@ To make filenames more user-friendly, you can extract title/date directly from H
 
 #### Example
 For this URL: `http://localhost/d/ID/stats?from=now-1y%2Fy&to=now-1y%2Fy`
-- The initial PDF filename will be: `stats_now-1y_y_to_now-1y_y.pdf`
-- With the custom configuration, the PDF filename could be: `Stats_Sunday_January_1_2023_-_Sunday_December_31_2023.pdf`
+- By default, the generated PDF will use the dashboard UID and raw time range values, like: `stats_now-1y_y_to_now-1y_y.pdf`
+- With the custom configuration enabled, and by extracting formatted content from Grafana panels, the filename can be more user-friendly, such as: `Stats_Sunday_January_1_2025_-_Sunday_December_31_2025.pdf`
 
 #### Activation
 
