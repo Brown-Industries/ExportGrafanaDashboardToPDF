@@ -160,7 +160,7 @@ http://your-grafana-server/d/your-dashboard-id?viewPanel=2
 
 ## Custom Configuration
 
-### Fetch the dashboard name and the time range from HTML elements to be used in the PDF filename
+### Improved PDF Filename from HTML Content
 
 To make filenames more user-friendly, you can extract title/date directly from HTML elements.
 
