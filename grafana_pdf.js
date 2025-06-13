@@ -51,6 +51,16 @@ const auth_header = 'Basic ' + Buffer.from(auth_string).toString('base64');
             }
             console.log("Final URL with kiosk mode:", finalUrl);
         }
+        if(process.env.FORCE_LIGHT_MODE === 'true') {
+            console.log("Checking if light mode is enabled.");
+            const urlObj = new URL(finalUrl);
+            if (!urlObj.searchParams.has('theme')) {
+                console.log("Light theme mode not enabled. Enabling it.");
+                urlObj.searchParams.set('theme', 'light');
+                finalUrl = urlObj.toString();
+            }
+            console.log("Final URL with light theme mode:", finalUrl);
+        }
 
         console.log("Starting browser...");
         const browser = await puppeteer.launch({
